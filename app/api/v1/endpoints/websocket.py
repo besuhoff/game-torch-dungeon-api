@@ -1,6 +1,6 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
-from typing import Dict, Set
-import json
+from typing import Dict
 from app.models.models import User, GameSession, PlayerState
 from app.api.v1.endpoints.auth import get_current_user
 
@@ -72,7 +72,7 @@ async def websocket_endpoint(
                 if data["type"] == "position_update":
                     # Update player position
                     session.players[str(user.id)].position = data["position"]
-                    session.players[str(user.id)].last_updated = datetime.utcnow()
+                    session.players[str(user.id)].last_updated = datetime.now(timezone.utc)
                     await session.save()
                     
                     # Broadcast to other players

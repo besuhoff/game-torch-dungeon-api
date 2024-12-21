@@ -7,7 +7,7 @@ A multiplayer game API built with FastAPI and MongoDB, supporting real-time game
 - Real-time multiplayer support via WebSockets
 - Google OAuth2 authentication
 - Game session management (create, join, leave)
-- Game state persistence with MongoDB
+- Game state persistence with MongoDB Atlas
 - Save/Load game functionality
 - Player state synchronization
 - Flexible game world objects system
@@ -15,7 +15,7 @@ A multiplayer game API built with FastAPI and MongoDB, supporting real-time game
 ## Prerequisites
 
 - Python 3.8+
-- MongoDB
+- MongoDB Atlas account
 - Google OAuth2 credentials
 
 ## Setup
@@ -35,19 +35,14 @@ pip install -r requirements.txt
 
 3. Set up environment variables in `.env`:
 ```env
-MONGODB_URL=mongodb://localhost:27017/dungeon_db
-SECRET_KEY=your-secret-key-here
+MONGODB_URL=your-mongodb-atlas-connection-string
+SECRET_KEY=your-secret-key
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_REDIRECT_URI=http://localhost:8000/auth/callback
 ```
 
-4. Start MongoDB:
-```bash
-docker run -d -p 27017:27017 --name dungeon-mongodb mongo:latest
-```
-
-5. Run the application:
+4. Run the application:
 ```bash
 uvicorn app.main:app --reload
 ```

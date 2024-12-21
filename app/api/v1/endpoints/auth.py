@@ -3,10 +3,12 @@ from fastapi.security import OAuth2AuthorizationCodeBearer
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from app.core.config import settings
+import httpx
 from app.models.models import User
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import secrets
+from fastapi.responses import RedirectResponse
 
 router = APIRouter()
 oauth2_scheme = OAuth2AuthorizationCodeBearer(
@@ -39,13 +41,15 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
         raise credentials_exception
     return user
 
+callbackRoute = f"/auth/google/callback"
+
 @router.get("/auth/google/url")
 async def get_google_auth_url():
     state = secrets.token_urlsafe(32)
-    url = f"https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&scope=openid%20email%20profile&state={state}"
+    url = f"https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.API_BASE_URL}{settings.API_PREFIX}{callbackRoute}&scope=openid%20email%20profile&state={state}"
     return {"url": url, "state": state}
 
-@router.get("/auth/google/callback")
+@router.get(callbackRoute)
 async def google_auth_callback(code: str, state: str):
     # Exchange code for token
     async with httpx.AsyncClient() as client:
@@ -56,7 +60,7 @@ async def google_auth_callback(code: str, state: str):
                 "client_secret": settings.GOOGLE_CLIENT_SECRET,
                 "code": code,
                 "grant_type": "authorization_code",
-                "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+                "redirect_uri": settings.API_BASE_URL + settings.API_PREFIX + callbackRoute,
             },
         )
         token_data = token_response.json()
@@ -80,4 +84,11 @@ async def google_auth_callback(code: str, state: str):
     
     # Create access token
     access_token = await create_access_token({"sub": str(user.id)})
-    return {"access_token": access_token, "token_type": "bearer"}
+    
+    # Redirect to game URL with token
+    redirect_url = f"{settings.FRONTEND_URL}?token={access_token}"
+    return RedirectResponse(url=redirect_url)
+
+@router.get("/auth/user")
+async def get_user(current_user: User = Depends(get_current_user)):
+    return current_user

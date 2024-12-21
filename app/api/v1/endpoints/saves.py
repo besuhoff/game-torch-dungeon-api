@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List
+from typing import List, Optional
 from app.models.models import User, GameSession, GameSave
 from app.api.v1.endpoints.auth import get_current_user
 
